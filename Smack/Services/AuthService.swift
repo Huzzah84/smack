@@ -92,7 +92,7 @@ class AuthService {
 //                // Using SwiftyJSON
 //            THIS IS BROKEN WITHOUT A THROW, TRY, or DO-Catch CODE "I DO NOT KNOW THIS AT THIS TIME"
 //              Also when changes are made the json are no longer recognized
-//              Changed JSON(data:data) to current code as show....seems ok
+//              Changed JSON(data:data) to current code as shown....seems ok
                 
                 guard let data = response.data else { return }
                 let json = JSON(response.result.value ?? data)
@@ -110,6 +110,43 @@ class AuthService {
         
     }
     
+    func createUser(name: String, email: String, avatarName: String, avatarColor: String, completion: @escaping CompletionHandler) {
+        
+        let lowerCaseEmail = email.lowercased()
+        
+        let body: [String: Any] = [
+            "name": name,
+            "email": lowerCaseEmail,
+            "avatarName": avatarName,
+            "avatarColor": avatarColor
+        ]
+        
+        let header = [
+            "Authorization": "Bearer \(AuthService.instance.authToken)",
+            "Content-Type": "application/json; charset=utf-8"
+        ]
+        
+        Alamofire.request(URL_USER_ADD, method: .post, parameters: body, encoding: JSONEncoding.default, headers: header).responseJSON { (response) in
+            
+            if response.result.error == nil {
+                guard let data = response.data else { return }
+                let json = JSON(response.result.value ?? data)
+                let id = json["_id"].stringValue
+                let color = json["avatarColor"].stringValue
+                let avatarName = json["avatarName"].stringValue
+                let email = json["email"].stringValue
+                let name = json["name"].stringValue
+                
+                UserDataService.instance.setUserData(id: id, color: color, avatarName: avatarName, email: email, name: name)
+                completion(true)
+                
+            } else {
+                completion(false)
+                debugPrint(response.result.error as Any)
+            }
+        }
+        
+    }
     
     
     
